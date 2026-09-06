@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#090a0f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Cursor Agent">
+  <title>Cursor Remote Agent</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-app: #090a0f;
+      --bg-surface: #11131a;
+      --bg-surface-elevated: #181b24;
+      --bg-card: #1c202d;
+      --bg-card-hover: #222736;
+      --border: #262c3d;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.3);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --code-bg: #07080c;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-layout {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: -webkit-fill-available;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Auth Modal */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 10, 15, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px var(--primary-glow);
+    }
+
+    .auth-logo-wrap {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(56, 189, 248, 0.1));
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px auto;
+    }
+
+    .auth-card h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .auth-card p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+      margin-bottom: 24px;
+    }
+
+    .auth-card input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-app);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      font-size: 1rem;
+      outline: none;
+      margin-bottom: 16px;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .auth-card input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .primary-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      border: none;
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+
+    .auth-error-msg {
+      color: var(--danger);
+      font-size: 0.82rem;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 300px;
+      max-width: 80%;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      z-index: 201;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      padding: calc(var(--safe-top) + 16px) 16px var(--safe-bottom) 16px;
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .drawer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .drawer-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .workspace-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-app);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+    .model-select-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+    }
+
+    .model-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-main);
+    }
+
+    .model-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .mcp-status-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mcp-status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot.green {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success-glow);
+    }
+
+    .app-info-section {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .drawer-btn {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .drawer-btn.install-btn {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(56, 189, 248, 0.1));
+      border-color: var(--primary);
+      color: var(--accent);
+    }
+
+    .drawer-btn.danger {
+      color: var(--danger);
+    }
+
+    /* Top Header */
+    .app-header {
+      background: rgba(17, 19, 26, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: calc(var(--safe-top) + 8px) 16px 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .header-left, .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .icon-btn:hover, .icon-btn:active {
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+    }
+
+    .project-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .branch-tag {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    /* Agent Carousel */
+    .agent-bar-wrapper {
+      background: var(--bg-app);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      flex-shrink: 0;
+    }
+
+    .agent-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .agent-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .agent-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .agent-pill.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(56, 189, 248, 0.15));
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 0 16px var(--primary-glow);
+      font-weight: 600;
+    }
+
+    /* Active Context Banner */
+    .active-context-bar {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .context-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .agent-badge-icon {
+      font-size: 1.25rem;
+    }
+
+    .context-texts {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .context-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .context-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .model-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+    }
+
+    /* Chat Feed */
+    .chat-feed {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .msg-card {
+      display: flex;
+      flex-direction: column;
+      max-width: 95%;
+    }
+
+    .msg-card.user {
+      align-self: flex-end;
+      max-width: 85%;
+    }
+
+    .msg-card.user .user-bubble {
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 18px 18px 4px 18px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      box-shadow: 0 4px 16px var(--primary-glow);
+      word-break: break-word;
+    }
+
+    .msg-card.agent-card {
+      align-self: flex-start;
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-surface-elevated);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .agent-avatar {
+      font-size: 1.1rem;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .agent-meta {
+      flex: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .agent-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .msg-time {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+    }
+
+    .badge.success {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge.running {
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .card-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: var(--text-main);
+      word-break: break-word;
+    }
+
+    .thinking-accordion {
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      background: rgba(139, 92, 246, 0.05);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .thinking-header {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #c4b5fd;
+      user-select: none;
+    }
+
+    .chevron-icon {
+      transition: transform 0.2s;
+    }
+
+    .thinking-accordion.open .chevron-icon {
+      transform: rotate(180deg);
+    }
+
+    .thinking-content {
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(139, 92, 246, 0.15);
+      font-style: italic;
+      line-height: 1.45;
+      display: none;
+    }
+
+    .thinking-accordion.open .thinking-content {
+      display: block;
+    }
+
+    .tool-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+
+    .tool-box-header {
+      background: var(--bg-surface-elevated);
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      color: var(--accent);
+      font-size: 0.75rem;
+    }
+
+    .tool-box-content {
+      padding: 10px;
+      color: #cbd5e1;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+
+    .card-body pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      margin: 6px 0;
+    }
+
+    .card-body code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: var(--accent);
+    }
+
+    .intro-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .intro-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .intro-chip:hover, .intro-chip:active {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .intro-chip .chip-icon {
+      font-size: 1.2rem;
+    }
+
+    .intro-chip div {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .intro-chip strong {
+      font-size: 0.85rem;
+      color: var(--text-main);
+    }
+
+    .intro-chip span {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* Footer / Dock */
+    .app-footer {
+      background: rgba(17, 19, 26, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      padding: 8px 16px calc(var(--safe-bottom) + 8px) 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .quick-chips-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .quick-chips-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .action-chip {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .action-chip:hover, .action-chip:active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .input-dock {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-app);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 4px 6px 4px 10px;
+    }
+
+    .input-dock:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+
+    .dock-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .dock-btn.agent-btn {
+      font-size: 1.1rem;
+      background: var(--bg-surface-elevated);
+    }
+
+    .dock-btn.send-btn {
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      color: #fff;
+      box-shadow: 0 2px 10px var(--primary-glow);
+    }
+
+    .dock-btn.send-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      line-height: 1.4;
+      resize: none;
+      min-height: 36px;
+      max-height: 120px;
+      outline: none;
+      padding: 8px 4px;
+    }
+
+    textarea::placeholder {
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-logo-wrap">
+        <img src="/icon.svg" width="54" height="54" alt="Logo">
+      </div>
+      <h2>Cursor Remote</h2>
+      <p>Acesso móvel e seguro aos agentes de IA e MCP do seu ambiente local.</p>
+      <input type="password" id="auth-token-input" placeholder="Token / Senha de Acesso" autocomplete="current-password" value="cursor-remote-2026">
+      <button id="auth-btn" class="primary-btn">
+        <span>Conectar ao Workspace</span>
+      </button>
+      <div id="auth-error" class="auth-error-msg">Token inválido. Verifique o config.json.</div>
+    </div>
+  </div>
+
+  <!-- Sidebar Drawer Menu -->
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <aside id="drawer" class="drawer">
+    <div class="drawer-header">
+      <div class="drawer-brand">
+        <img src="/icon.svg" width="28" height="28" alt="Logo">
+        <span>Cursor Remote</span>
+      </div>
+      <button id="drawer-close-btn" class="icon-btn">✕</button>
+    </div>
+
+    <div class="drawer-content">
+      <div class="drawer-section">
+        <label class="section-label">Workspace Ativo</label>
+        <div class="workspace-pill">
+          📁 <span id="drawer-workspace-name">D:\Projetos\Cursor</span>
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <label class="section-label">Modelo de IA</label>
+        <div class="model-select-card">
+          <div class="model-badge">
+            <span class="sparkle">✨</span>
+            <span id="drawer-model-name">mega-brain</span>
+          </div>
+          <span class="model-sub">Antigravity 9router (BYOK)</span>
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <label class="section-label">MCP Bridges Conectados</label>
+        <div class="mcp-status-list">
+          <div class="mcp-status-item">
+            <span class="dot green"></span>
+            <span>cursor-bridge (:9222)</span>
+          </div>
+          <div class="mcp-status-item">
+            <span class="dot green"></span>
+            <span>playwright-mcp</span>
+          </div>
+          <div class="mcp-status-item">
+            <span class="dot green"></span>
+            <span>repomix</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-section app-info-section">
+        <button id="force-refresh-btn" class="drawer-btn" onclick="forceAppRefresh()">
+          <span>🔄 Forçar Atualização / Limpar Cache</span>
+        </button>
+        <button id="pwa-install-btn" class="drawer-btn install-btn" style="display:none;">
+          <span>📲 Instalar Aplicativo (PWA)</span>
+        </button>
+        <button id="clear-chat-btn" class="drawer-btn">
+          <span>🧹 Limpar Conversa</span>
+        </button>
+        <button id="logout-btn" class="drawer-btn danger">
+          <span>🚪 Desconectar</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- App Layout -->
+  <div class="app-layout">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <button id="drawer-toggle-btn" class="icon-btn" aria-label="Menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="project-pill">
+          <span>📁</span>
+          <span class="project-name" id="top-project-name">cursor-remoto</span>
+          <span class="branch-tag">main</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="status-indicator online">
+          <span class="live-dot"></span>
+          <span class="status-label">Online</span>
+        </div>
+        <button id="new-session-btn" class="icon-btn" title="Nova Sessão">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Agent Carousel -->
+    <div class="agent-bar-wrapper">
+      <div class="agent-bar" id="agent-bar"></div>
+    </div>
+
+    <!-- Active Context -->
+    <div class="active-context-bar" id="active-context-bar">
+      <div class="context-info">
+        <span class="agent-badge-icon" id="current-agent-icon">💻</span>
+        <div class="context-texts">
+          <div class="context-title" id="current-agent-title">Developer Agent</div>
+          <div class="context-desc" id="current-agent-desc">Implementação de código e execução de ferramentas</div>
+        </div>
+      </div>
+      <div class="context-meta">
+        <span class="model-pill">mega-brain</span>
+      </div>
+    </div>
+
+    <!-- Chat Feed -->
+    <main id="chat-feed" class="chat-feed">
+      <div class="msg-card agent-card intro-card">
+        <div class="card-header">
+          <div class="agent-avatar">🤖</div>
+          <div class="agent-meta">
+            <span class="agent-name">Cursor Remote Engine</span>
+            <span class="msg-time">Agora</span>
+          </div>
+          <span class="badge success">Pronto</span>
+        </div>
+        <div class="card-body">
+          <p>Conectado ao workspace local via Cloudflare Zero Trust e MCP Bridge.</p>
+          <div class="intro-grid">
+            <div class="intro-chip" onclick="quickFill('/fix ')">
+              <span class="chip-icon">⚡</span>
+              <div>
+                <strong>/fix</strong>
+                <span>Consertar erros e testes</span>
+              </div>
+            </div>
+            <div class="intro-chip" onclick="quickFill('/ship ')">
+              <span class="chip-icon">🚀</span>
+              <div>
+                <strong>/ship</strong>
+                <span>Entregar feature completa</span>
+              </div>
+            </div>
+            <div class="intro-chip" onclick="quickFill('/improve ')">
+              <span class="chip-icon">🔍</span>
+              <div>
+                <strong>/improve</strong>
+                <span>Auditar e refatorar</span>
+              </div>
+            </div>
+            <div class="intro-chip" onclick="quickFill('pytest -q')">
+              <span class="chip-icon">🧪</span>
+              <div>
+                <strong>pytest -q</strong>
+                <span>Executar suíte de testes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Dock -->
+    <footer class="app-footer">
+      <div class="quick-chips-scroll">
+        <button class="action-chip" onclick="quickFill('/fix ')">⚡ /fix</button>
+        <button class="action-chip" onclick="quickFill('/ship ')">🚀 /ship</button>
+        <button class="action-chip" onclick="quickFill('/improve ')">🔍 /improve</button>
+        <button class="action-chip" onclick="quickFill('/plan ')">📐 /plan</button>
+        <button class="action-chip" onclick="quickFill('pytest -q')">🧪 pytest</button>
+        <button class="action-chip" onclick="quickFill('git status')">🌿 git status</button>
+      </div>
+
+      <div class="input-dock">
+        <button id="agent-selector-dock-btn" class="dock-btn agent-btn" title="Alternar Agente">
+          <span id="dock-agent-icon">💻</span>
+        </button>
+
+        <textarea id="prompt-input" placeholder="Instrução ou comando para o agent..." rows="1"></textarea>
+
+        <button id="send-btn" class="dock-btn send-btn" aria-label="Enviar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // State
+    let authToken = localStorage.getItem('cursor_remote_token') || 'cursor-remote-2026';
+    let currentAgent = localStorage.getItem('cursor_active_agent') || 'developer';
+    let sessionId = 'session_' + Math.random().toString(36).substring(2, 9);
+    let eventSource = null;
+    let deferredPrompt = null;
+    let agentsList = [
+      { id: "architect", name: "Architect", description: "Design e planejamento técnico", icon: "📐" },
+      { id: "developer", name: "Developer", description: "Implementação de código", icon: "💻" },
+      { id: "tester", name: "Tester", description: "Validação e qualidade", icon: "🧪" },
+      { id: "reviewer", name: "Reviewer", description: "Revisão e segurança", icon: "🔍" },
+      { id: "explorer", name: "Explorer", description: "Busca de símbolos e codebase", icon: "🧭" }
+    ];
+
+    // DOM References
+    const authModal = document.getElementById('auth-modal');
+    const authTokenInput = document.getElementById('auth-token-input');
+    const authBtn = document.getElementById('auth-btn');
+    const authError = document.getElementById('auth-error');
+
+    const drawer = document.getElementById('drawer');
+    const drawerOverlay = document.getElementById('drawer-overlay');
+    const drawerToggleBtn = document.getElementById('drawer-toggle-btn');
+    const drawerCloseBtn = document.getElementById('drawer-close-btn');
+
+    const agentBar = document.getElementById('agent-bar');
+    const currentAgentIcon = document.getElementById('current-agent-icon');
+    const currentAgentTitle = document.getElementById('current-agent-title');
+    const currentAgentDesc = document.getElementById('current-agent-desc');
+    const dockAgentIcon = document.getElementById('dock-agent-icon');
+
+    const chatFeed = document.getElementById('chat-feed');
+    const promptInput = document.getElementById('prompt-input');
+    const sendBtn = document.getElementById('send-btn');
+    const newSessionBtn = document.getElementById('new-session-btn');
+    const clearChatBtn = document.getElementById('clear-chat-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const pwaInstallBtn = document.getElementById('pwa-install-btn');
+
+    // Drawer Handlers
+    function toggleDrawer(open) {
+      if (open) {
+        drawer.classList.add('open');
+        drawerOverlay.classList.add('open');
+      } else {
+        drawer.classList.remove('open');
+        drawerOverlay.classList.remove('open');
+      }
+    }
+
+    if (drawerToggleBtn) drawerToggleBtn.addEventListener('click', () => toggleDrawer(true));
+    if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', () => toggleDrawer(false));
+    if (drawerOverlay) drawerOverlay.addEventListener('click', () => toggleDrawer(false));
+
+    window.forceAppRefresh = async function() {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const k of keys) await caches.delete(k);
+      }
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) await r.unregister();
+      }
+      window.location.href = window.location.origin + '/?v=' + Date.now();
+    };
+
+    // Auth
+    authBtn.addEventListener('click', async () => {
+      const token = authTokenInput.value.trim();
+      if (!token) return;
+
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          authToken = data.token;
+          localStorage.setItem('cursor_remote_token', authToken);
+          authModal.style.display = 'none';
+          authError.style.display = 'none';
+          initApp();
+        } else {
+          authError.style.display = 'block';
+        }
+      } catch (err) {
+        authError.textContent = 'Erro ao conectar ao servidor';
+        authError.style.display = 'block';
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('cursor_remote_token');
+      authToken = '';
+      if (eventSource) eventSource.close();
+      toggleDrawer(false);
+      authModal.style.display = 'flex';
+    });
+
+    // App Init
+    async function initApp() {
+      if (!authToken) {
+        authModal.style.display = 'flex';
+        return;
+      }
+      authModal.style.display = 'none';
+      if (sendBtn) sendBtn.disabled = false;
+      renderAgents(agentsList);
+      selectAgent(currentAgent);
+      await loadAgents();
+      connectSSE();
+    }
+
+    async function loadAgents() {
+      try {
+        const res = await fetch('/api/agents', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.status === 401) {
+          logoutBtn.click();
+          return;
+        }
+        const data = await res.json();
+        if (data.agents && data.agents.length) {
+          agentsList = data.agents;
+          renderAgents(agentsList);
+          selectAgent(currentAgent);
+        }
+      } catch (e) {}
+    }
+
+    function renderAgents(agents) {
+      agentBar.innerHTML = '';
+      agents.forEach((ag) => {
+        const pill = document.createElement('div');
+        pill.className = `agent-pill ${ag.id === currentAgent ? 'active' : ''}`;
+        pill.innerHTML = `<span>${ag.icon || '🤖'}</span><span>${ag.name}</span>`;
+        pill.addEventListener('click', () => selectAgent(ag.id));
+        agentBar.appendChild(pill);
+      });
+    }
+
+    function selectAgent(agentId) {
+      currentAgent = agentId;
+      localStorage.setItem('cursor_active_agent', agentId);
+
+      document.querySelectorAll('.agent-pill').forEach(p => {
+        p.classList.remove('active');
+        if (p.innerText.toLowerCase().includes(agentId.toLowerCase())) {
+          p.classList.add('active');
+        }
+      });
+
+      const ag = agentsList.find(a => a.id === agentId) || {
+        name: agentId.toUpperCase(),
+        icon: '💻',
+        description: 'Agente ativo'
+      };
+
+      if (currentAgentIcon) currentAgentIcon.textContent = ag.icon || '💻';
+      if (currentAgentTitle) currentAgentTitle.textContent = `${ag.name} Agent`;
+      if (currentAgentDesc) currentAgentDesc.textContent = ag.description || 'Pronto para execução';
+      if (dockAgentIcon) dockAgentIcon.textContent = ag.icon || '💻';
+    }
+
+    window.quickFill = function(text) {
+      promptInput.value = text;
+      promptInput.focus();
+      promptInput.style.height = 'auto';
+      promptInput.style.height = Math.min(promptInput.scrollHeight, 120) + 'px';
+    };
+
+    if (clearChatBtn) {
+      clearChatBtn.addEventListener('click', () => {
+        chatFeed.innerHTML = '';
+        toggleDrawer(false);
+      });
+    }
+
+    if (newSessionBtn) {
+      newSessionBtn.addEventListener('click', () => {
+        sessionId = 'session_' + Math.random().toString(36).substring(2, 9);
+        connectSSE();
+        const notice = document.createElement('div');
+        notice.className = 'msg-card user';
+        notice.innerHTML = `<div class="user-bubble" style="background:var(--bg-surface-elevated);color:var(--text-muted);">🔄 Nova sessão iniciada</div>`;
+        chatFeed.appendChild(notice);
+        scrollBottom();
+      });
+    }
+
+    // SSE
+    let currentCard = null;
+    let currentBody = null;
+    let currentThinkingContent = null;
+    let currentTextSpan = null;
+    let currentBadge = null;
+
+    function connectSSE() {
+      if (eventSource) eventSource.close();
+      eventSource = new EventSource(`/api/stream?session_id=${sessionId}&token=${authToken}`);
+
+      eventSource.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          handleSSEEvent(data);
+        } catch (err) {}
+      };
+    }
+
+    function handleSSEEvent(data) {
+      if (data.type === 'start') {
+        const ag = agentsList.find(a => a.id === data.agent) || { name: data.agent || 'Agent', icon: '🤖' };
+
+        const card = document.createElement('div');
+        card.className = 'msg-card agent-card';
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="agent-avatar">${ag.icon}</div>
+            <div class="agent-meta">
+              <span class="agent-name">${ag.name}</span>
+              <span class="msg-time">Agora</span>
+            </div>
+            <span class="badge running">Executando</span>
+          </div>
+          <div class="card-body"></div>
+        `;
+
+        chatFeed.appendChild(card);
+        currentCard = card;
+        currentBody = card.querySelector('.card-body');
+        currentBadge = card.querySelector('.badge');
+        currentThinkingContent = null;
+        currentTextSpan = null;
+        scrollBottom();
+
+      } else if (data.type === 'thought' && currentBody) {
+        if (!currentThinkingContent) {
+          const accordion = document.createElement('div');
+          accordion.className = 'thinking-accordion open';
+          accordion.innerHTML = `
+            <div class="thinking-header" onclick="this.parentElement.classList.toggle('open')">
+              <span>💭 Raciocínio do Modelo</span>
+              <span class="chevron-icon">▼</span>
+            </div>
+            <div class="thinking-content"></div>
+          `;
+          currentBody.appendChild(accordion);
+          currentThinkingContent = accordion.querySelector('.thinking-content');
+        }
+        currentThinkingContent.innerHTML += (currentThinkingContent.innerHTML ? '<br>' : '') + escapeHtml(data.text);
+        scrollBottom();
+
+      } else if (data.type === 'tool_call' && currentBody) {
+        const toolBox = document.createElement('div');
+        toolBox.className = 'tool-box';
+        toolBox.innerHTML = `
+          <div class="tool-box-header">
+            <span>🛠️ Ação: ${escapeHtml(data.name || 'tool')}</span>
+            <span class="badge running">rodando</span>
+          </div>
+          <div class="tool-box-content">${escapeHtml(JSON.stringify(data.input, null, 2))}</div>
+        `;
+        currentBody.appendChild(toolBox);
+        scrollBottom();
+
+      } else if (data.type === 'tool_result' && currentBody) {
+        const toolBox = currentBody.querySelector('.tool-box:last-of-type');
+        if (toolBox) {
+          const badge = toolBox.querySelector('.badge');
+          if (badge) {
+            badge.className = 'badge success';
+            badge.textContent = 'ok';
+          }
+          const content = toolBox.querySelector('.tool-box-content');
+          if (content) {
+            content.textContent += '\n\n' + (typeof data.output === 'object' ? JSON.stringify(data.output, null, 2) : data.output);
+          }
+        }
+        scrollBottom();
+
+      } else if (data.type === 'chunk' && currentBody) {
+        if (!currentTextSpan) {
+          const span = document.createElement('div');
+          span.className = 'markdown-output';
+          currentBody.appendChild(span);
+          currentTextSpan = span;
+        }
+        currentTextSpan.innerHTML = formatMarkdown((currentTextSpan.getAttribute('data-raw') || '') + data.text);
+        currentTextSpan.setAttribute('data-raw', (currentTextSpan.getAttribute('data-raw') || '') + data.text);
+        scrollBottom();
+
+      } else if (data.type === 'done') {
+        if (currentBadge) {
+          currentBadge.className = 'badge success';
+          currentBadge.textContent = 'Concluído';
+        }
+        sendBtn.disabled = false;
+        currentCard = null;
+        currentBody = null;
+        scrollBottom();
+      }
+    }
+
+    async function sendMessage() {
+      const prompt = promptInput.value.trim();
+      if (!prompt || sendBtn.disabled) return;
+
+      const userDiv = document.createElement('div');
+      userDiv.className = 'msg-card user';
+      userDiv.innerHTML = `<div class="user-bubble">${escapeHtml(prompt)}</div>`;
+      chatFeed.appendChild(userDiv);
+
+      promptInput.value = '';
+      promptInput.style.height = 'auto';
+      scrollBottom();
+
+      sendBtn.disabled = true;
+      setTimeout(() => { if (sendBtn) sendBtn.disabled = false; }, 15000);
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            agent_id: currentAgent,
+            prompt,
+            session_id: sessionId
+          })
+        });
+
+        if (res.status === 401) logoutBtn.click();
+      } catch (err) {
+        sendBtn.disabled = false;
+        alert('Erro ao enviar mensagem');
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+
+    promptInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    promptInput.addEventListener('input', () => {
+      promptInput.style.height = 'auto';
+      promptInput.style.height = Math.min(promptInput.scrollHeight, 120) + 'px';
+    });
+
+    function scrollBottom() {
+      chatFeed.scrollTop = chatFeed.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      if (typeof text !== 'string') text = String(text);
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatMarkdown(text) {
+      if (!text) return '';
+      let html = escapeHtml(text);
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+      html = html.replace(/\n/g, '<br>');
+      return html;
+    }
+
+    // Start App
+    initApp();
+  </script>
+</body>
+</html>

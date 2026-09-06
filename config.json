@@ -1,0 +1,41 @@
+{
+  "host": "0.0.0.0",
+  "port": 4040,
+  "auth_token": "cursor-remote-2026",
+  "default_workspace": "D:\\Projetos\\Cursor",
+  "agents": [
+    {
+      "id": "architect",
+      "name": "Architect",
+      "description": "System design and technical planning",
+      "icon": "📐"
+    },
+    {
+      "id": "developer",
+      "name": "Developer",
+      "description": "Code implementation with minimal diff",
+      "icon": "💻"
+    },
+    {
+      "id": "tester",
+      "name": "Tester",
+      "description": "Validation and test execution",
+      "icon": "🧪"
+    },
+    {
+      "id": "reviewer",
+      "name": "Reviewer",
+      "description": "Readiness and security review",
+      "icon": "🔍"
+    },
+    {
+      "id": "explorer",
+      "name": "Explorer",
+      "description": "Codebase search and symbol discovery",
+      "icon": "🧭"
+    }
+  ],
+  "mcp_endpoints": {
+    "cursor_bridge": "http://127.0.0.1:9222"
+  }
+}
